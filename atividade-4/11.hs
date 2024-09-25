@@ -6,8 +6,7 @@ euclides x y = if y == 0 then x else euclides y (mod x y)
 
 main :: IO ()
 main = do
-    putStrLn "Digite o primeiro número: "
-    x <- getLine
-    putStrLn "Digite o segundo número: "
-    y <- getLine
-    print (euclides (read x) (read y))
+    putStrLn "Digite os dois números separados por espaço: "
+    v <- getLine
+    let [x, y] = map read (words v)
+    print ("Maximo divisor comum: " ++ show (euclides x y))
