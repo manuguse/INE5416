@@ -1,42 +1,46 @@
-# criar um jogo de kojun. regras:
+from termcolor import colored
 
-# Um número no intervalo 1~N deve ser inserido em cada campo de uma área composta por N campos.
-# Cada número deve ser usado exatamente uma vez.
-# Os números em campos ortogonalmente adjacentes devem ser diferentes.
-# Se dois campos na mesma área forem adjacentes verticalmente, o número do campo superior deverá ser maior que o número do campo inferior.
+class Kojun:
+    def __init__(self, tamanho) -> None:
+        self.tamanho = tamanho
+        self.board = [['██' for _ in range(tamanho)] for _ in range(tamanho)]
+        self.colors = ['red', 'green', 'blue', 'yellow', 'magenta', 'cyan', 'dark_grey']
+       
 
-# É parecido com o sudoku, mas com algumas regras diferentes. Precisamos criar um tabuleiro de kojun e implementar um algoritmo que resolva o tabuleiro.
+        # Definir blocos com posições específicas
+        self.blocks = [
+            [(0, 0), (0, 1), (1, 1), (1, 2), (2, 2), (2, 1), (1,0)],  # Bloco 1
+            [(0, 2), (0, 3), (0, 4), (1, 3), (1, 4)],  # Bloco 2
+            [(0, 5), (1, 5), (2, 5), (2, 4), (2, 3), (1, 1)],  # Bloco 3
+            [(3, 1), (4, 1), (4, 2), (5, 2)],  # Bloco 4
+            [(3, 2), (3, 3), (3, 4), (4, 3), (4, 4), (5, 3)],  # Bloco 5
+            [(3, 5), (4, 5), (5, 5), (5, 4), (5, 3)],  # Bloco 6
+            [(2,0), (3, 0), (4, 0), (4, 1), (5, 1), (5, 0)]  # Bloco 7
+            ]
+        
+        self.board[0][0] = '1'
+        self.board[0][1] = '2'
+        self.board[0][2] = '3'
+        self.board[0][3] = '4'	
+        self.board[0][4] = '5'
 
-# Não preocupe-se com o desempenho da sua solução, e foque em tamanhos de tabuleiros de até 10x10 no
-# primeiro e segundo puzzle, e até 9x9 no terceiro puzzle. Só depois tente melhorar o código para também
-# satisfazer tabuleiros maiores. Além disso, implemente a entrada e a saída (resposta do programa) da forma que
-# o grupo considerar melhor. A entrada, por exemplo, pode ser fornecida diretamente no código fonte, sem que
-# seja necessária a digitação por parte do usuário.
-# Dica 1: a técnica de programação mais adequada para resolver este problema é a da “tentativa e erro”
-# (backtracking). Pesquise como utilizá-la em Haskell.
-# Dica 2: aprenda a jogar o puzzle e depois pense em como modelar o problema (em especial, o tabuleiro
-# em si) por meio de alguma estrutura de dados adequada (ex: matriz, árvore, etc). Se preferir, primeiro resolva
-# o puzzle em alguma linguagem que o grupo domina (ex: Python, C++, Java).
-# Dica 3: a página pode ser traduzida para inglês ou português, para melhor compreensão das regras. Você
-# também pode acessar esta página ( https://www.janko.at/Raetsel/Rules.htm ) para entender o que os
-# autores dos puzzles querem dizer com algumas palavras, como "area", "orthogonally", "diagonal", "region",
-# etc.
-# Dica 4: procure como criar um resolvedor do puzzle Sudoku em Haskell, aprenda como funciona e faça as
-# adaptações necessárias para resolver o problema proposto para este trabalho
+        self.print_board()
 
-# o tabuleiro nao é exatamente um quadrado, entao precisamos delimitar as areas
-
-def build_board(n):
-    board = [[0 for i in range(n)] for j in range(n)]
-    print(board)
+    def print_board(self):
+        for i in range(self.tamanho):
+            for j in range(self.tamanho):
+                color = self.get_block_color((i, j))
+                print(colored(self.board[i][j], color), end=('' if self.board[i][j] == '██' else ' '))
+            print()
     
-def print_board(board):
-    for row in board:
-        print(row)
+    def get_block_color(self, pos):
+        for i, block in enumerate(self.blocks):
+            if pos in block:
+                return self.colors[i]
+            
+    def solve_kojun(self):
+        pass
 
-def main():
-    n = 6
-    build_board(n)  
-    
-if __name__ == "__main__":
-    main()
+# Criação do tabuleiro de tamanho 6x6
+k = Kojun(6)
+print(k.solve_kojun())
