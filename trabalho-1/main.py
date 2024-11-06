@@ -5,9 +5,9 @@ colors = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
           'light_grey', 'dark_grey', 'light_red', 'light_green', 
           'light_yellow', 'light_blue', 'light_magenta', 'light_cyan']
 
-tamanho = utils.get_tamanho()
-blocks = utils.get_blocks()
-board = utils.get_board()
+tamanho = utils.board1().get_tamanho()
+blocks = utils.board1().get_blocks()
+board = utils.board1().get_board()
 
 def print_board(): # funciona
     """Imprime o tabuleiro com cores de acordo com os blocos."""
@@ -82,11 +82,6 @@ def solve():
 
     return False
     
-def semi_solved(): # método para ver melhor o print, não é necessário
-    """Verifica se pelo menos metade das células estão preenchidas."""
-    count = sum(1 for i in range(tamanho) for j in range(tamanho) if board[i][j] != '██')
-    return count >= tamanho * tamanho // 2
-
 print_board()
 solve()
 print_board()
