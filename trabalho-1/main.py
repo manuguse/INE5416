@@ -1,4 +1,3 @@
-from itertools import permutations
 from termcolor import colored
 import utils
 
@@ -8,7 +7,7 @@ COLORS = ['red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'light_grey', 'da
 
 # Função de inicialização do jogo
 def initialize_game():
-    board_instance = utils.board3()
+    board_instance = utils.board2()
     return board_instance.get_tamanho(), board_instance.get_blocks(), board_instance.get_board()
 
 TAMANHO, BLOCKS, BOARD = initialize_game()
@@ -37,7 +36,7 @@ def get_region_size(row, col):
 #####################################
 ######## Funções de Exibição ########
 #####################################
-
+import os
 def print_board():
     """Imprime o tabuleiro com cores de acordo com os blocos."""
     for i in range(TAMANHO):
@@ -46,7 +45,8 @@ def print_board():
             cell_value = get_board_position(i, j)
             print(colored(cell_value, color), end=" "if cell_value != '██' else "")
         print()
-    print()
+    os.system('clear')
+    
 
 #####################################
 ######## Funções de Validação #######
@@ -68,10 +68,10 @@ def is_valid(row, col, num):
             return False
 
     # Verificação de grandeza vertical dentro da mesma região
-    if row > 0 and get_block_position(row - 1, col) == region_id:  # Célula acima na mesma região
+    if row > 0 and get_block_position(row - 1, col) == region_id:
         if get_board_position(row - 1, col) != '██' and get_board_position(row - 1, col) <= num:
             return False
-    if row < TAMANHO - 1 and get_block_position(row + 1, col) == region_id:  # Célula abaixo na mesma região
+    elif row < TAMANHO - 1 and get_block_position(row + 1, col) == region_id:  # Célula abaixo na mesma região
         if get_board_position(row + 1, col) != '██' and get_board_position(row + 1, col) >= num:
             return False
 
@@ -86,7 +86,7 @@ def get_possible_values(row, col):
     region_size = get_region_size(row, col)
     region_id = get_block_position(row, col)
     used_values = {get_board_position(i, j) for i, j in get_region_cells(region_id) if get_board_position(i, j) != '██'}
-    return [num for num in range(1, region_size + 1) if num not in used_values]
+    return list(reversed([num for num in range(1, region_size + 1) if num not in used_values]))
 
 def solve():
     """Resolve o quebra-cabeça usando permutações e backtracking."""
@@ -102,6 +102,7 @@ def solve():
     for num in possible_values:
         if is_valid(row, col, num):
             set_board_position(row, col, num)
+            print_board()
             if solve():
                 return True
             set_board_position(row, col, '██')  # Backtrack
