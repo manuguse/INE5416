@@ -1,4 +1,4 @@
-module Main (main) where
+module Main where
 
 import System.Random (randomRIO)
 import Parser (parseFileToMatrix)
@@ -8,11 +8,12 @@ import Kojun (solve)
 getAvailableBoards :: [Int]
 getAvailableBoards = [1, 8, 14]
 
--- Escolhe um board aleatoriamente
+-- Escolhe um board aleatoriamente (a fim de testes, começaremos escolhendo sempre o 1)
 getRandomNumberFromAvailable :: [Int] -> IO Int
 getRandomNumberFromAvailable available = do
-    randomIndex <- randomRIO (0, length available - 1)
-    return $ available !! randomIndex
+    -- randomIndex <- randomRIO (0, length available - 1)
+    -- return $ available !! randomIndex
+    return 1
 
 main :: IO ()
 main = do

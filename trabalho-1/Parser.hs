@@ -1,4 +1,4 @@
-module Parser where
+module Parser (parseFileToMatrix) where
 
 import Data.Maybe (fromMaybe)
 
