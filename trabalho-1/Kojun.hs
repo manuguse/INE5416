@@ -34,7 +34,7 @@ maybeMap _ Nothing = Nothing
 maybeMap f (Just x) = Just (f x)
 
 boardSize :: Board -> Int
-boardSize board = length board
+boardSize = length
 
 solucao :: Board
 solucao = [[Just 1, Just 2, Just 1], [Just 2, Just 1, Just 3], [Just 1, Just 3, Just 2]]
@@ -44,8 +44,8 @@ solve board blocks = do
     trace ("\nBoard: " ++ show board) $ return ()
     trace ("Blocks: " ++ show blocks) $ return ()
     -- trace ("Solucao: " ++ show solucao) $ return ()
-    if verify solucao blocks 
-    then return (Just board)
+    if verify solucao blocks
+    then return (Just solucao)
     else return Nothing
 
 verify :: Board -> Board -> Bool
@@ -63,7 +63,7 @@ maxNumEqualsLenBlocks board blocks = trace ("\nNúmero da célula permitido: " +
   where
     maxBlockValue = maximum [fromMaybe 0 (board !! r !! c) | r <- [0..boardSize board - 1], c <- [0..boardSize board - 1]]
     result = maxBlockValue <= boardSize board
-    
+
 
 noRepeatedNumberInBlock :: Board -> Board -> Bool
 noRepeatedNumberInBlock board blocks = trace ("\nNão há números repetidos: " ++ show result ++ "\n") result
@@ -82,17 +82,17 @@ uniqueElements xss = trace "\nProcurando elementos únicos\n" $
 noRepeatedNumberInAdjacentCells :: Board -> Bool
 noRepeatedNumberInAdjacentCells board = trace ("\nNão há celulas adjacentes com valores iguais: " ++ show result ++ "\n") result
   where
-    noRepeatsInAdjacentCells (r, c) = 
+    noRepeatsInAdjacentCells (r, c) =
         let cellValue = board !! r !! c
             adjacentPositions = [(r-1, c), (r+1, c), (r, c-1), (r, c+1)]
             adjacentValues = [board !! r' !! c' | (r', c') <- adjacentPositions, r' >= 0, r' < length board, c' >= 0, c' < length (board !! r')]
         in trace ("Célula (" ++ show r ++ ", " ++ show c ++ ") valor: " ++ show cellValue ++ ", Valores adjacentes: " ++ show adjacentValues) $
-           isNothing cellValue || all (/= cellValue) adjacentValues
+           isNothing cellValue || notElem cellValue adjacentValues
     result = all noRepeatsInAdjacentCells [(r, c) | r <- [0..length board - 1], c <- [0..length (board !! r) - 1]]
 
 -- Verifica se dentro de um bloco, não há um menor em cima de um maior
 noSmallerNumberOnTopOfBiggerNumber :: Board -> Board -> Bool
-noSmallerNumberOnTopOfBiggerNumber board blocks = 
+noSmallerNumberOnTopOfBiggerNumber board blocks =
     trace ("\nVerificando números menores em cima de maiores no mesmo bloco: " ++ show result) result
   where
     -- Função que verifica a regra para uma célula específica
