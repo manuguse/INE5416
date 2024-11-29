@@ -15,13 +15,15 @@ module Kojun (solve) where
 
 import Data.Maybe (isNothing, fromMaybe)
 import Debug.Trace
+import Data.List (nub)
 
 type Board = [[Maybe Int]]
 
--- Remove elementos duplicados de uma lista
-nub :: Eq a => [a] -> [a]
-nub [] = []
-nub (x:xs) = x : nub (filter (/= x) xs)
+debugTrace :: String -> a -> a
+debugTrace msg x = if enableDebug then trace msg x else x
+
+enableDebug :: Bool
+enableDebug = True
 
 -- Verifica se um Maybe é Just
 isJust :: Maybe a -> Bool
@@ -36,64 +38,64 @@ maybeMap f (Just x) = Just (f x)
 boardSize :: Board -> Int
 boardSize = length
 
-solucao :: Board
-solucao = [[Just 1, Just 2, Just 1], [Just 2, Just 1, Just 3], [Just 1, Just 3, Just 2]]
+solucaoTeste :: Board
+solucaoTeste = [[Just 1, Just 2, Just 1], [Just 2, Just 1, Just 3], [Just 1, Just 3, Just 2]]
 
 solve :: Board -> Board -> IO (Maybe Board)
 solve board blocks = do
-    trace ("\nBoard: " ++ show board) $ return ()
-    trace ("Blocks: " ++ show blocks) $ return ()
-    -- trace ("Solucao: " ++ show solucao) $ return ()
-    if verify solucao blocks
-    then return (Just solucao)
+    debugTrace ("\nBoard: " ++ show board) $ return ()
+    debugTrace ("Blocks: " ++ show blocks) $ return ()
+    -- debugTrace ("Solucao: " ++ show solucao) $ return ()
+    if verify solucaoTeste blocks
+    then return (Just solucaoTeste)
     else return Nothing
 
 verify :: Board -> Board -> Bool
-verify board blocks = trace ("Board válido: " ++ show result) result
+verify board blocks = debugTrace ("Board válido: " ++ show result) result
   where
     result = and [maxNumEqualsLenBlocks board blocks, allFilled board, noRepeatedNumberInBlock board blocks, noRepeatedNumberInAdjacentCells board, noSmallerNumberOnTopOfBiggerNumber board blocks]
 
 allFilled :: Board -> Bool
-allFilled board = trace ("Todas as células estão preenchidas: " ++ show result) result
+allFilled board = debugTrace ("Todas as células estão preenchidas: " ++ show result) result
   where
     result = all (all isJust) board
 
 maxNumEqualsLenBlocks :: Board -> Board -> Bool
-maxNumEqualsLenBlocks board blocks = trace ("\nNúmero da célula permitido: " ++ show result ++ "\n") result
+maxNumEqualsLenBlocks board blocks = debugTrace ("\nNúmero da célula permitido: " ++ show result ++ "\n") result
   where
     maxBlockValue = maximum [fromMaybe 0 (board !! r !! c) | r <- [0..boardSize board - 1], c <- [0..boardSize board - 1]]
     result = maxBlockValue <= boardSize board
 
 
 noRepeatedNumberInBlock :: Board -> Board -> Bool
-noRepeatedNumberInBlock board blocks = trace ("\nNão há números repetidos: " ++ show result ++ "\n") result
+noRepeatedNumberInBlock board blocks = debugTrace ("\nNão há números repetidos: " ++ show result ++ "\n") result
   where
     uniqueBlocks = uniqueElements blocks
     noRepeatsInBlock block = let values = [board !! r !! c | (r, c) <- block, isJust (board !! r !! c)]
-                             in trace ("Valores do bloco: " ++ show values) $
+                             in debugTrace ("Valores do bloco: " ++ show values) $
                                 length values == length (nub values)
     result = all noRepeatsInBlock uniqueBlocks
 
 uniqueElements :: Eq a => [[a]] -> [[(Int, Int)]]
-uniqueElements xss = trace "\nProcurando elementos únicos\n" $
+uniqueElements xss = debugTrace "\nProcurando elementos únicos\n" $
     map (\x -> [(r, c) | r <- [0..length xss - 1], c <- [0..length (xss !! r) - 1], xss !! r !! c == x]) (nub (concat xss))
 
 -- Verifica se há números repetidos nas células adjacentes
 noRepeatedNumberInAdjacentCells :: Board -> Bool
-noRepeatedNumberInAdjacentCells board = trace ("\nNão há celulas adjacentes com valores iguais: " ++ show result ++ "\n") result
+noRepeatedNumberInAdjacentCells board = debugTrace ("\nNão há celulas adjacentes com valores iguais: " ++ show result ++ "\n") result
   where
     noRepeatsInAdjacentCells (r, c) =
         let cellValue = board !! r !! c
             adjacentPositions = [(r-1, c), (r+1, c), (r, c-1), (r, c+1)]
             adjacentValues = [board !! r' !! c' | (r', c') <- adjacentPositions, r' >= 0, r' < length board, c' >= 0, c' < length (board !! r')]
-        in trace ("Célula (" ++ show r ++ ", " ++ show c ++ ") valor: " ++ show cellValue ++ ", Valores adjacentes: " ++ show adjacentValues) $
+        in debugTrace ("Célula (" ++ show r ++ ", " ++ show c ++ ") valor: " ++ show cellValue ++ ", Valores adjacentes: " ++ show adjacentValues) $
            isNothing cellValue || notElem cellValue adjacentValues
     result = all noRepeatsInAdjacentCells [(r, c) | r <- [0..length board - 1], c <- [0..length (board !! r) - 1]]
 
 -- Verifica se dentro de um bloco, não há um menor em cima de um maior
 noSmallerNumberOnTopOfBiggerNumber :: Board -> Board -> Bool
 noSmallerNumberOnTopOfBiggerNumber board blocks =
-    trace ("\nVerificando números menores em cima de maiores no mesmo bloco: " ++ show result) result
+    debugTrace ("\nVerificando números menores em cima de maiores no mesmo bloco: " ++ show result) result
   where
     -- Função que verifica a regra para uma célula específica
     isValidCell (i, j) =
@@ -101,7 +103,7 @@ noSmallerNumberOnTopOfBiggerNumber board blocks =
             aboveValue = if i > 0 && (blocks !! i !! j == blocks !! (i - 1) !! j)
                          then board !! (i - 1) !! j
                          else Nothing
-        in trace ("Célula (" ++ show i ++ ", " ++ show j ++ ") valor: " ++ show currentValue ++ ", Acima: " ++ show aboveValue) $
+        in debugTrace ("Célula (" ++ show i ++ ", " ++ show j ++ ") valor: " ++ show currentValue ++ ", Acima: " ++ show aboveValue) $
            case (currentValue, aboveValue) of
                (Just curr, Just above) -> curr <= above -- Regra corrigida: atual deve ser menor ou igual ao de cima
                _ -> True -- Caso não haja valores ou estejam em blocos diferentes
