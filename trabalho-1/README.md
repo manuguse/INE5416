@@ -1,4 +1,4 @@
-# implementação de resolução de um kojun.
+# implementação de resolução de um kojun
 
 para rodar:
 

@@ -1,4 +1,4 @@
-module Parser (parseFileToMatrix) where
+module Parser (parseFileToMatrix, printBoard) where
 
 import Data.Maybe (fromMaybe)
 
@@ -15,3 +15,11 @@ parseFileToMatrix filePath = do
     content <- readFile filePath
     let linesOfFile = lines content
     return $ map parseLine linesOfFile
+
+printBoard :: [[Maybe Int]] -> IO ()
+printBoard board = mapM_ printRow board
+  where
+    printRow row = do
+        mapM_ printCell row
+        putStrLn ""
+    printCell cell = putStr $ fromMaybe "◻️" (fmap show cell) ++ " "

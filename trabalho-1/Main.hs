@@ -1,19 +1,18 @@
 module Main where
 
 import System.Random (randomRIO)
-import Parser (parseFileToMatrix)
 import Kojun (solve)
+import Parser (parseFileToMatrix, printBoard)
 
 -- Lista de boards disponíveis
 getAvailableBoards :: [Int]
-getAvailableBoards = [1, 8, 14]
+getAvailableBoards = [0, 1, 8, 14]
 
--- Escolhe um board aleatoriamente (a fim de testes, começaremos escolhendo sempre o 1)
-getRandomNumberFromAvailable :: [Int] -> IO Int
+
 getRandomNumberFromAvailable available = do
     -- randomIndex <- randomRIO (0, length available - 1)
     -- return $ available !! randomIndex
-    return 1
+    return 0
 
 main :: IO ()
 main = do
@@ -21,11 +20,15 @@ main = do
     let boardPath = "boards/" ++ show number ++ ".txt"
     let blockPath = "blocks/" ++ show number ++ ".txt"
 
-    values <- parseFileToMatrix boardPath
-    groups <- parseFileToMatrix blockPath
+    board <- parseFileToMatrix boardPath
+    blocks <- parseFileToMatrix blockPath
 
-    case solve values groups of
-        Nothing -> putStrLn "No solution found!"
-        Just solution -> do
-            putStrLn "Solution:"
-            mapM_ print solution
+    putStrLn "Tabuleiro inicial:"
+    printBoard board
+
+    solution <- solve board blocks
+    case solution of
+        Nothing -> putStrLn "Não foi possível encontrar uma solução."
+        Just sol -> do
+            putStrLn "\nSolução:"
+            printBoard sol
