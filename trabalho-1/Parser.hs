@@ -17,9 +17,9 @@ parseFileToMatrix filePath = do
     return $ map parseLine linesOfFile
 
 printBoard :: [[Maybe Int]] -> IO ()
-printBoard board = mapM_ printRow board
+printBoard = mapM_ printRow
   where
     printRow row = do
         mapM_ printCell row
         putStrLn ""
-    printCell cell = putStr $ fromMaybe "◻️" (fmap show cell) ++ " "
+    printCell cell = putStr $ maybe "◻" show cell ++ " "

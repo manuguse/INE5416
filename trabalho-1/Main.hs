@@ -12,7 +12,7 @@ getAvailableBoards = [0, 1, 8, 14]
 getRandomNumberFromAvailable available = do
     -- randomIndex <- randomRIO (0, length available - 1)
     -- return $ available !! randomIndex
-    return 0
+    return 14
 
 main :: IO ()
 main = do
