@@ -4,13 +4,14 @@ object Main {
   import Kojun._
 
   def getAvailableBoards(): List[Int] = {
-    // List(0, 1, 8, 14)
-    List(0)
+    List(0, 1, 8, 14)
   }
 
   def main(args: Array[String]): Unit = {
     val availableBoards = getAvailableBoards()
-    availableBoards.foreach { number =>
+    val boardsToProcess = if (args.isEmpty) availableBoards else List(args(0).toInt)
+
+    boardsToProcess.foreach { number =>
       println("\n--------------------------------\n")
       val boardPath = s"boards/$number.txt"
       val blockPath = s"blocks/$number.txt"

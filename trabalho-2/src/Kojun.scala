@@ -1,7 +1,7 @@
 object Kojun {
   type Board = List[List[Option[Int]]]
 
-  var enableDebug = true
+  var enableDebug = false
 
   def debugPrint(text: String): Unit = {
     if (enableDebug) println(text) else ()
@@ -11,25 +11,89 @@ object Kojun {
     board.length
   }
 
-  def mockBoard(): Board = {
-    List(
-      List(Some(2), Some(2), Some(3)),
-      List(Some(2), Some(3), Some(1)),
-      List(Some(3), Some(1), Some(2))
-    )
+  def solve(board: Board, blocks: Board): Option[Board] = {
+    debugPrint(s"Resolvendo tabuleiro $board")
+    solveBoard(board, blocks)
   }
 
-  def solve(board: Board, blocks: Board): Option[Board] = {
-    verify(mockBoard(), blocks)
-    Some(mockBoard())
+  def solveBoard(board: Board, blocks: Board): Option[Board] = {
+    debugPrint(s"solveBoard chamado com board:\n$board")
+    if (!verify(board, blocks)) {
+      debugPrint("Tabuleiro inválido")
+      None
+    } else if (allFilled(board)) {
+      debugPrint("Tabuleiro preenchido corretamente")
+      Some(board)
+    } else {
+      val emptyCell = findEmptyCell(board)
+      tryFillCell(board, blocks, emptyCell)
+    }
+  }
+
+  def allFilled(board: Board): Boolean = {
+    board.flatten.forall(_.isDefined)
+  }
+
+  def findEmptyCell(board: Board): (Int, Int) = {
+    val emptyCell = for {
+      r <- board.indices
+      c <- board(r).indices
+      if board(r)(c).isEmpty
+    } yield (r, c)
+    emptyCell.head
+  }
+
+  def tryFillCell(board: Board, blocks: Board, cell: (Int, Int)): Option[Board] = {
+    val (r, c) = cell
+    val possibleValues = (1 to boardSize(board)).filter { value =>
+      val newBoard = updateBoard(board, r, c, Some(value))
+      verify(newBoard, blocks)
+    }
+    debugPrint(s"Tentando preencher célula ($r, $c) com valores $possibleValues")
+    val result = possibleValues.foldLeft(None: Option[Board]) { (acc, value) =>
+      acc match {
+        case Some(_) => acc
+        case None =>
+          val newBoard = board.updated(r, board(r).updated(c, Some(value)))
+          solveBoard(newBoard, blocks)
+      }
+    }
+    debugPrint(s"Resultado da tentativa de preenchimento da célula ($r, $c): $result")
+    result
+  }
+
+  def maxValueInBlock(board: Board, block: List[(Int, Int)]): Int = {
+    block.map { case (r, c) => board(r)(c).get }.max
+  }
+
+  def tryBoards(boards: List[Board], blocks: Board): Option[Board] = {
+    boards match {
+      case Nil =>
+        debugPrint("Nenhum tabuleiro válido encontrado")
+        None
+      case b :: bs =>
+        debugPrint(s"Tentando resolver tabuleiro:\n$b")
+        solveBoard(b, blocks) match {
+          case Some(solved) =>
+            debugPrint("Tabuleiro resolvido")
+            Some(solved)
+          case None =>
+            tryBoards(bs, blocks)
+        }
+    }
+  }
+
+  def updateBoard(board: Board, r: Int, c: Int, value: Option[Int]): Board = {
+    board.updated(r, board(r).updated(c, value))
   }
 
   def verify(board: Board, blocks: Board): Boolean = {
-    val result = maxNumEqualsLenBlocks(board, blocks) &&
+    val result = 
+      maxNumEqualsLenBlocks(board, blocks) &&
       noRepeatedNumberInBlock(board, blocks) &&
       noRepeatedNumberInAdjacentCells(board) &&
       noSmallerNumberOnTopOfBiggerNumber(board, blocks)
-    println(s"Resultado da verificação: $result")
+    debugPrint(s"Resultado da verificação: $result")
     result
   }
 
@@ -88,7 +152,7 @@ object Kojun {
         }
       }
     }
-    debugPrint(s"Verificando números menores em cima de maiores no mesmo bloco: $result")
+    debugPrint(s"Não há menores em cima de maiores no mesmo bloco: $result")
     result
   }
 }
