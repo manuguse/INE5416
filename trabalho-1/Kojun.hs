@@ -25,12 +25,10 @@ debugTrace msg x = if enableDebug then trace msg x else x
 enableDebug :: Bool
 enableDebug = False
 
--- Verifica se um Maybe é Just
 isJust :: Maybe a -> Bool
 isJust (Just _) = True
 isJust _ = False
 
--- Aplica uma função a um valor dentro de um Maybe
 maybeMap :: (a -> b) -> Maybe a -> Maybe b
 maybeMap _ Nothing = Nothing
 maybeMap f (Just x) = Just (f x)
@@ -38,49 +36,46 @@ maybeMap f (Just x) = Just (f x)
 boardSize :: Board -> Int
 boardSize = length
 
-solucaoTeste :: Board
-solucaoTeste = [[Just 1, Just 2, Just 1], [Just 2, Just 1, Just 3], [Just 1, Just 3, Just 2]]
-
 solve :: Board -> Board -> IO (Maybe Board)
 solve board blocks = do
     debugTrace ("Tentando resolver o tabuleiro:\n" ++ show board) $ return ()
     return $ solveBoard board blocks
 
 solveBoard :: Board -> Board -> Maybe Board
-solveBoard board blocks
-    | not (verify board blocks) = Nothing
-    | allFilled board = Just board
-    | otherwise = tryFillCell board blocks nextCell
+solveBoard board blocks = debugTrace ("solveBoard chamado com board:\n" ++ show board) $
+    if not (verify board blocks)
+    then debugTrace "Tabuleiro inválido" Nothing
+    else if allFilled board
+         then debugTrace "Tabuleiro preenchido corretamente" (Just board)
+         else tryFillCell board blocks nextCell
   where
     nextCell = findEmptyCell board
 
 findEmptyCell :: Board -> Maybe (Int, Int)
 findEmptyCell board = 
     let emptyCells = [(r, c) | r <- [0..length board - 1], c <- [0..length (board !! r) - 1], isNothing (board !! r !! c)]
-    in if null emptyCells then Nothing else Just (head emptyCells)
-
+    in debugTrace ("Células vazias encontradas: " ++ show emptyCells) $
+       if null emptyCells then Nothing else Just (head emptyCells)
 
 tryFillCell :: Board -> Board -> Maybe (Int, Int) -> Maybe Board
-tryFillCell _ _ Nothing = Nothing
-tryFillCell board blocks (Just (r, c)) =
+tryFillCell _ _ Nothing = debugTrace "Nenhuma célula vazia encontrada" Nothing
+tryFillCell board blocks (Just (r, c)) = debugTrace ("Tentando preencher célula (" ++ show r ++ ", " ++ show c ++ ")") $
     let maxValue = maxValueInBlock blocks r c
         possibleValues = [1..maxValue]
         validBoards = [updateBoard board r c (Just v) | v <- possibleValues, verify (updateBoard board r c (Just v)) blocks]
     in tryBoards validBoards blocks
 
--- Função para determinar o valor máximo permitido em uma célula com base no bloco
 maxValueInBlock :: Board -> Int -> Int -> Int
-maxValueInBlock blocks r c =
+maxValueInBlock blocks r c = debugTrace ("Calculando valor máximo para célula (" ++ show r ++ ", " ++ show c ++ ")") $
     let blockId = fromMaybe (-1) (blocks !! r !! c)
         blockCells = [(i, j) | i <- [0..length blocks - 1], j <- [0..length (blocks !! i) - 1], blocks !! i !! j == Just blockId]
     in length blockCells
 
-
 tryBoards :: [Board] -> Board -> Maybe Board
-tryBoards [] _ = Nothing
-tryBoards (b:bs) blocks =
+tryBoards [] _ = debugTrace "Nenhum tabuleiro válido encontrado" Nothing
+tryBoards (b:bs) blocks = debugTrace ("Tentando resolver tabuleiro:\n" ++ show b) $
     case solveBoard b blocks of
-        Just solved -> Just solved
+        Just solved -> debugTrace "Tabuleiro resolvido" (Just solved)
         Nothing -> tryBoards bs blocks
 
 updateBoard :: Board -> Int -> Int -> Maybe Int -> Board
@@ -88,16 +83,16 @@ updateBoard board r c val =
     take r board ++ [take c (board !! r) ++ [val] ++ drop (c + 1) (board !! r)] ++ drop (r + 1) board
 
 verify :: Board -> Board -> Bool
-verify board blocks = and
-    [ maxNumEqualsLenBlocks board blocks
+verify board blocks = debugTrace ("Verificando tabuleiro:\n" ++ show board) $
+    and [ maxNumEqualsLenBlocks board blocks
     , noRepeatedNumberInBlock board blocks
     , noRepeatedNumberInAdjacentCells board
     , noSmallerNumberOnTopOfBiggerNumber board blocks
     ]
 
--- Verifica se todas as células estão preenchidas
 allFilled :: Board -> Bool
-allFilled = all (all isJust)
+allFilled board = debugTrace ("Verificando se todas as células estão preenchidas:\n" ++ show board) $
+    all (all isJust) board
 
 maxNumEqualsLenBlocks :: Board -> Board -> Bool
 maxNumEqualsLenBlocks board blocks = debugTrace ("\nNúmero da célula permitido: " ++ show result ++ "\n") result
