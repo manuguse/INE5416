@@ -35,16 +35,14 @@ dê permissão de execução ao script:
 chmod +x ./run.sh
 ```
 
-execute o script, de forma que se desejar um tabuleiro específico, passa o número como argumento, e use o argumento v/f para compilar ou não o programa:
-
 roda o tabuleiro específico:
 
 ```bash
-./run.sh <tabuleiro> <v/f>
+./run.sh <tabuleiro> 
 ```
 
 roda todos:
 
 ```bash
-./run.sh <v/f>
+./run.sh 
 ```

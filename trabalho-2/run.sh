@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Check if Scala is installed
+# verifica se o Scala está instalado no sistema
 if ! command -v scala &> /dev/null || ! command -v scalac &> /dev/null; then
     echo "Scala is not installed. Please install it manually or with:"
     echo "  sudo apt update && sudo apt install -y scala"
     exit 1
 fi
 
-# Ensure the output directory exists
+# verifica a exitência do diretório de saída, se não existir, cria
 OUT_DIR="out"
 mkdir -p "$OUT_DIR"
 
-# Compile the Scala source files if necessary
+# verifica se é necessário compilar os arquivos, se for, compila
 COMPILE_NEEDED=false
 for src_file in src/*.scala; do
     compiled_file="$OUT_DIR/$(basename "${src_file%.scala}.class")"
@@ -32,21 +32,21 @@ else
     echo "No compilation needed. Using existing compiled files."
 fi
 
-# Ensure an argument is provided
-if [[ $# -eq 0 ]]; then
-    echo "Usage: ./run <number>"
-    exit 1
-fi
+# vê se o número de argumentos está correto
+# if [[ $# -eq 0 ]]; then
+#     echo "Usage: ./run <number>"
+#     exit 1
+# fi
 
-# Run the Scala program
-echo "Running the program..."
+# roda o programa
+echo "Rodando..."
 scala -cp "$OUT_DIR" Main "$@"
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -ne 0 ]]; then
-    echo "Program exited with errors."
+    echo "Programa encerrado com erro."
 else
-    echo "Program executed successfully."
+    echo "Programa encerrado com sucesso."
 fi
 
 exit $EXIT_CODE
