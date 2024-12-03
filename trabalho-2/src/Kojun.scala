@@ -16,8 +16,8 @@ object Kojun {
     solveBoard(board, blocks)
   }
 
-  def solveBoard(board: Board, blocks: Board): Option[Board] = {
-    debugPrint(s"solveBoard chamado com board:\n$board")
+   def solveBoard(board: Board, blocks: Board): Option[Board] = {
+    debugPrint(s"solveBoard chamado com board: $board")
     if (!verify(board, blocks)) {
       debugPrint("Tabuleiro inválido")
       None
@@ -25,66 +25,63 @@ object Kojun {
       debugPrint("Tabuleiro preenchido corretamente")
       Some(board)
     } else {
-      val emptyCell = findEmptyCell(board)
-      tryFillCell(board, blocks, emptyCell)
+      findEmptyCell(board) match {
+        case None => debugPrint("Nenhuma célula vazia encontrada") 
+                  None
+        case Some((r, c)) =>
+          debugPrint(s"Tentando preencher célula ($r, $c)")
+          val maxValue = maxValueInBlock(blocks, r, c)
+          val possibleValues = (1 to maxValue).toList
+          val validBoards = possibleValues.collect {
+            case v if verify(updateBoard(board, r, c, Some(v)), blocks) =>
+              updateBoard(board, r, c, Some(v))
+          }
+          tryBoards(validBoards, blocks)
+      }
     }
   }
 
-  def allFilled(board: Board): Boolean = {
-    board.flatten.forall(_.isDefined)
+    def maxValueInBlock(blocks: Board, r: Int, c: Int): Int = {
+    debugPrint(s"Calculando valor máximo para célula ($r, $c)")
+    val blockId = blocks(r)(c).getOrElse(-1)
+    val blockCells = for {
+      i <- blocks.indices
+      j <- blocks(i).indices
+      if blocks(i)(j).contains(blockId)
+    } yield (i, j)
+    blockCells.length
   }
 
-  def findEmptyCell(board: Board): (Int, Int) = {
-    val emptyCell = for {
+
+  def findEmptyCell(board: Board): Option[(Int, Int)] = {
+    val emptyCells = for {
       r <- board.indices
       c <- board(r).indices
       if board(r)(c).isEmpty
     } yield (r, c)
-    emptyCell.head
-  }
-
-  def tryFillCell(board: Board, blocks: Board, cell: (Int, Int)): Option[Board] = {
-    val (r, c) = cell
-    val possibleValues = (1 to boardSize(board)).filter { value =>
-      val newBoard = updateBoard(board, r, c, Some(value))
-      verify(newBoard, blocks)
-    }
-    debugPrint(s"Tentando preencher célula ($r, $c) com valores $possibleValues")
-    val result = possibleValues.foldLeft(None: Option[Board]) { (acc, value) =>
-      acc match {
-        case Some(_) => acc
-        case None =>
-          val newBoard = board.updated(r, board(r).updated(c, Some(value)))
-          solveBoard(newBoard, blocks)
-      }
-    }
-    debugPrint(s"Resultado da tentativa de preenchimento da célula ($r, $c): $result")
-    result
-  }
-
-  def maxValueInBlock(board: Board, block: List[(Int, Int)]): Int = {
-    block.map { case (r, c) => board(r)(c).get }.max
+    debugPrint(s"Células vazias encontradas: $emptyCells")
+    emptyCells.headOption
   }
 
   def tryBoards(boards: List[Board], blocks: Board): Option[Board] = {
     boards match {
-      case Nil =>
-        debugPrint("Nenhum tabuleiro válido encontrado")
-        None
+      case Nil => debugPrint("Nenhum tabuleiro válido encontrado"); None
       case b :: bs =>
-        debugPrint(s"Tentando resolver tabuleiro:\n$b")
+        debugPrint(s"Tentando resolver tabuleiro: $b")
         solveBoard(b, blocks) match {
-          case Some(solved) =>
-            debugPrint("Tabuleiro resolvido")
-            Some(solved)
-          case None =>
-            tryBoards(bs, blocks)
+          case Some(solved) => debugPrint("Tabuleiro resolvido"); Some(solved)
+          case None => tryBoards(bs, blocks)
         }
     }
   }
 
   def updateBoard(board: Board, r: Int, c: Int, value: Option[Int]): Board = {
     board.updated(r, board(r).updated(c, value))
+  }
+
+  def allFilled(board: Board): Boolean = {
+    debugPrint(s"Verificando se todas as células estão preenchidas: $board")
+    board.flatten.forall(_.isDefined)
   }
 
   def verify(board: Board, blocks: Board): Boolean = {
