@@ -5,24 +5,28 @@ import Kojun (solve)
 import Parser (parseFileToMatrix, printBoard)
 import Control.Monad (forM_)
 
--- Lista de boards disponíveis
+-- lista de boards disponíveis
 getAvailableBoards :: [Int]
 getAvailableBoards = [0, 1, 8, 14]
 
 main :: IO ()
 main = do
-    let availableBoards = getAvailableBoards
-    forM_ availableBoards $ \number -> do
+    let availableBoards = getAvailableBoards -- recebe a lista de boards disponíveis
+    forM_ availableBoards $ \number -> do -- para cada board disponível,
         putStrLn "\n--------------------------------\n"
-        let boardPath = "boards/" ++ show number ++ ".txt"
+        -- define o caminho dos arquivos de tabuleiro e blocos
+        let boardPath = "boards/" ++ show number ++ ".txt" 
         let blockPath = "blocks/" ++ show number ++ ".txt"
 
+        -- lê os arquivos de tabuleiro e blocos, fazendo o parse para uma matriz
         board <- parseFileToMatrix boardPath
         blocks <- parseFileToMatrix blockPath
 
+        -- printa o tabuleiro inicial
         putStrLn $ "Tabuleiro inicial (" ++ show number ++ "):"
         printBoard board
 
+        -- tenta resolver o tabuleiro, chamando a função solve de Kojun
         solution <- solve board blocks
         case solution of
             Nothing -> putStrLn "Não foi possível encontrar uma solução."
