@@ -30,12 +30,12 @@ object Main {
       val blocks = parseFileToMatrix(blockPath) // parseia para uma matriz
 
       println(s"Tabuleiro inicial ($number):")
-      printBoard(board)
+      printBoard(board, blocks)
 
       solve(board, blocks) match { // tenta resolver
         case Some(solution) => // se tiver solução imprime o tabuleiro
           println("\nSolução:")
-          printBoard(solution)
+          printBoard(solution, blocks)
         case None => // se não tiver solução avisa que não foi possível encontrar
           println("Não foi possível encontrar uma solução.")
       }
