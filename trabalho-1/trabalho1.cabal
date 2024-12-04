@@ -23,6 +23,7 @@ executable trabalho1
                        Kojun
   -- other-extensions:
   build-depends:       base >=4.13,
-                       random >=1.1 && <1.2  
+                       random >=1.1 && <1.2,
+                       ansi-terminal >=0.11
   -- hs-source-dirs:
   default-language:    Haskell2010

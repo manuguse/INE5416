@@ -24,7 +24,7 @@ main = do
 
         -- printa o tabuleiro inicial
         putStrLn $ "Tabuleiro inicial (" ++ show number ++ "):"
-        printBoard board
+        printBoard board blocks
 
         -- tenta resolver o tabuleiro, chamando a função solve de Kojun
         solution <- solve board blocks
@@ -32,4 +32,4 @@ main = do
             Nothing -> putStrLn "Não foi possível encontrar uma solução."
             Just sol -> do
                 putStrLn "\nSolução:"
-                printBoard sol
+                printBoard sol blocks
