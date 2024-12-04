@@ -4,40 +4,39 @@ object Main {
   import Kojun._
 
   def getAvailableBoards(): List[Int] = {
-    List(
-  1 to 110: _*)
+    List(1 to 110: _*)
   }
 
   def main(args: Array[String]): Unit = {
-    val availableBoards = getAvailableBoards()
-    val boardsToProcess = if (args.isEmpty || !args(0).forall(_.isDigit)) {
-      availableBoards
-    } else {
+    val availableBoards = getAvailableBoards() // pega os 110 tabuleiros disponíveis (a função existe mais porque antes eu nao tinha todos)
+    val boardsToProcess = if (args.isEmpty || !args(0).forall(_.isDigit)) { // se não passar argumento ou se o argumento não for um número
+      availableBoards // vamos usar todos os tabuleiros
+    } else { // se houver argumento, vamos usar apenas o tabuleiro passado
         val boardNumber = args(0).toInt
         if (availableBoards.contains(boardNumber)) {
-        List(boardNumber)
+        List(boardNumber) // criamos uma lista com só com o número, pra fazer a iteração
       } else {
         println(s"Erro: O tabuleiro $boardNumber não está disponível. Os tabuleiros disponíveis são: ${availableBoards.mkString(", ")}")
         return
       }
     }
 
-    boardsToProcess.foreach { number =>
+    boardsToProcess.foreach { number => // para cada número (tabuleiro)
       println("\n--------------------------------\n")
-      val boardPath = s"boards/$number.txt"
-      val blockPath = s"blocks/$number.txt"
+      val boardPath = s"boards/$number.txt" // pegamos o path
+      val blockPath = s"blocks/$number.txt" // pegamos o path
 
-      val board = parseFileToMatrix(boardPath)
-      val blocks = parseFileToMatrix(blockPath)
+      val board = parseFileToMatrix(boardPath) // parseia para uma matriz
+      val blocks = parseFileToMatrix(blockPath) // parseia para uma matriz
 
       println(s"Tabuleiro inicial ($number):")
       printBoard(board)
 
-      solve(board, blocks) match {
-        case Some(solution) =>
+      solve(board, blocks) match { // tenta resolver
+        case Some(solution) => // se tiver solução imprime o tabuleiro
           println("\nSolução:")
           printBoard(solution)
-        case None =>
+        case None => // se não tiver solução avisa que não foi possível encontrar
           println("Não foi possível encontrar uma solução.")
       }
     }

@@ -13,8 +13,8 @@ object Kojun {
 
   def solve(board: Board, blocks: Board): Option[Board] = {
       debugPrint(s"Resolvendo tabuleiro $board")
-      solveBoard(board, blocks)
-  }
+      solveBoard(board, blocks) // chama a função solveBoard, que é o que vai ser retornado
+    }
 
   def solveBoard(board: Board, blocks: Board): Option[Board] = {
       debugPrint(s"solveBoard chamado com board: $board")
@@ -130,43 +130,48 @@ object Kojun {
 
   // verifica se não há números repetidos em um bloco
   def noRepeatedNumberInBlock(board: Board, blocks: Board): Boolean = {
-      // pega os blocos únicos ()
+      // pega as posições de cada valor único no tabuleiro
       val uniqueBlocks = uniqueElements(blocks)
-      val result = uniqueBlocks.forall { block =>
+      val result = uniqueBlocks.forall { block => // para cada bloco, verifica se os valores são únicos
+        // define os valores do bloco como uma lista de valores
           val values = block.flatMap { case (row, column) => board(row)(column) }
-          values.distinct.length == values.length
+          // verifica se os valores diferentes tem o mesmo tamanho do total
+          values.distinct.length == values.length 
       }
       debugPrint(s"Não há números repetidos: $result")
       result
   }
 
   def noRepeatedNumberInAdjacentCells(board: Board): Boolean = {
-      val result = board.indices.forall { row =>
-          board(row).indices.forall { column =>
-              val cellValue = board(row)(column)
-              val adjacentPositions = List((row-1, column), (row+1, column), (row, column-1), (row, column+1))
-              val adjacentValues = adjacentPositions.collect {
+    // verifica se não há números repetidos nas células adjacentes
+      val result = board.indices.forall { row => // para cada linha
+          board(row).indices.forall { column => // para cada coluna
+              val cellValue = board(row)(column) // pegamos o valor da célula
+              val adjacentPositions = List((row-1, column), (row+1, column), (row, column-1), (row, column+1)) // definimos as posições adjacentes
+              val adjacentValues = adjacentPositions.collect { // pegamos os valores das células adjacentes, se existirem
                   case (row, column) if row >= 0 && row < board.length && column >= 0 && column < board(row).length => board(row)(column)
-              }.flatten
+              }.flatten // transformamos em uma lista de valores
+               // vai ser verdadeiro se a célula estiver vazia ou se o valor não estiver em um dos lados
               cellValue.isEmpty || !adjacentValues.contains(cellValue.get)
           }
       }
       debugPrint(s"Não há células adjacentes com valores iguais: $result")
-      result
+      result // retorna o resultado
   }
 
   def noSmallerNumberOnTopOfBiggerNumber(board: Board, blocks: Board): Boolean = {
-      val result = board.indices.forall { i =>
-          board(i).indices.forall { j =>
-              val currentValue = board(i)(j)
+      val result = board.indices.forall { i => // para cada linha
+          board(i).indices.forall { j => // para cada coluna
+              val currentValue = board(i)(j) // pegamos o valor da célula
+              // vai ter um "valor de cima" se a linha for maior que 0 e o bloco for o mesmo, senão None
               val aboveValue = if (i > 0 && blocks(i)(j) == blocks(i - 1)(j)) board(i - 1)(j) else None
-              (currentValue, aboveValue) match {
-                  case (Some(curr), Some(above)) => curr <= above
-                  case _ => true
+              (currentValue, aboveValue) match { // verifica se o valor atual é maior que o de cima
+                  case (Some(curr), Some(above)) => curr <= above // se ambos tiverem valor, verifica se o de cima é maior
+                  case _ => true // se não tiver valor de cima, não tem como comparar, então é verdadeiro
               }
           }
       }
       debugPrint(s"Não há menores em cima de maiores no mesmo bloco: $result")
-      result
+      result // retorna o resultado
   }
 }

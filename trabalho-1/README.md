@@ -3,6 +3,5 @@
 para rodar:
 
 ```bash
-cabal update
 cabal run
 ```
