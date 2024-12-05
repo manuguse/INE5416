@@ -7,7 +7,7 @@ import Control.Monad (forM_)
 -- lista de boards disponíveis
 getAvailableBoards :: [Int]
 --getAvailableBoards = [0, 1, 8, 14]
-getAvailableBoards = [0..35]
+getAvailableBoards = [0..35] 
 
 main :: IO ()
 main = do

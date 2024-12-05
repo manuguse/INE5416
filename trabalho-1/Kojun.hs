@@ -79,7 +79,8 @@ tryFillCell board blocks (Just (row, column)) = debugTrace ("Tentando preencher 
         -- para pegar os tabuleiros válidos, mapeia a função updateBoard para cada valor possível e verifica se o tabuleiro é válido
         -- o valid boards vai ser uma lista de tabuleiros tal que cada tabuleiro é o tabuleiro original com a célula (row, column) 
             -- preenchida com um valor v tal que v é um valor possível
-        validBoards = [updateBoard board row column (Just v) | v <- possibleValues, verify (updateBoard board row column (Just v)) blocks]
+        validBoards = [updateBoard board row column (Just v) |
+                        v <- possibleValues, verify (updateBoard board row column (Just v)) blocks]
     in tryBoards validBoards blocks -- tenta resolver o tabuleiro para cada um dos tabuleiros válidos
 
 -- calcula o valor máximo permitido para uma célula com base no bloco (será o próprio taamanho do bloco)
