@@ -4,7 +4,7 @@ object Main {
   import Kojun._
 
   def getAvailableBoards(): List[Int] = {
-    List(1 to 110: _*)
+    List(1 to 35: _*) // pode ir até 110, mas botando aqui pra facilitar a visualização
   }
 
   def main(args: Array[String]): Unit = {
