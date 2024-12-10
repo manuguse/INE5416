@@ -1,45 +1,14 @@
 :- use_module(library(clpfd)).
-
-% Definição dos puzzles
-puzzle(
-    1,
-    [
-        [0, 2, 1],
-        [2, 1, 0],
-        [1, 0, 2]
-    ],
-    [
-        [1, 1, 2],
-        [3, 4, 4],
-        [3, 3, 4]
-    ]
-).
-
-puzzle(
-    2,
-    [
-        [2, 0, 0, 0, 1, 0],
-        [0, 0, 3, 0, 0, 0],
-        [0, 3, 0, 5, 3, 0],
-        [0, 0, 0, 0, 0, 0],
-        [0, 0, 3, 0, 4, 2],
-        [0, 0, 0, 0, 0, 0]
-    ],
-    [
-        [1, 1, 7, 7, 7, 11],
-        [2, 2, 2, 2, 2, 11],
-        [3, 6, 6, 6, 2, 10],
-        [3, 3, 3, 6, 10, 10],
-        [4, 4, 8, 9, 9, 9],
-        [5, 5, 8, 8, 9, 9]
-    ]
-).
+:- consult('puzzles.pl').
 
 board(ID, Board) :-
     puzzle(ID, Board, _).
 
 blocks(ID, Blocks) :-
     puzzle(ID, _, Blocks).
+
+size(Block, Size) :-
+    length(Block, Size).
 
 printList([]).
 printList([H|T]) :- write(H), write(" "), printList(T).
@@ -51,28 +20,28 @@ get_position(Board, I, J, Found) :-
     nth0(I, Board, Line),
     nth0(J, Line, Found).
 
-set_position(Position, Value, CurrentList, NewList) :- 
+set_position(Position, Value, List, NewList) :- 
     length(Prefix, Position),
-    append(Prefix, [_|Suffix], CurrentList),
+    append(Prefix, [_|Suffix], List),
     append(Prefix, [Value|Suffix], NewList).
 
-update_board(Board, I, J, Value, NewBoard) :-
+update_board(Board, I, J, Value, Solution) :-
     nth0(I, Board, OldRow, RestRows),
     set_position(J, Value, OldRow, NewRow),
-    nth0(I, NewBoard, NewRow, RestRows).
+    nth0(I, Solution, NewRow, RestRows).
 
-searchNumberOnRegion(Board, Blocks, BlockId, Result) :-
+find_number_on_block(Board, Blocks, BlockId, Result) :-
     get_position(Blocks, I, J, BlockId),
     get_position(Board, I, J, Result).
 
 block_numbers(Board, Blocks, BlockId, FinalList) :- 
-    findall(FoundNumber, searchNumberOnRegion(Board, Blocks, BlockId, FoundNumber), FinalList).
+    findall(FoundNumber, find_number_on_block(Board, Blocks, BlockId, FoundNumber), FinalList).
 
-complement(List, Complement) :-
-    length(List, Length),
-    numlist(1, Length, UniverseList),
-    delete(List, 0, RestList),
-    subtract(UniverseList, RestList, Complement).
+complement(Board, List, Complement) :-
+    size(Board, Max),
+    numlist(1, Max, UniverseList), 
+    delete(List, 0, FilteredList),
+    subtract(UniverseList, FilteredList, Complement).
 
 is_empty_cell(Board, Blocks, BlockId, [I, J]) :-
     get_position(Blocks, I, J, BlockId),
@@ -86,16 +55,16 @@ verify_empty(Board, Blocks, I, J) :-
     get_empty_cells(Board, Blocks, BlockId, ListOfZeroedPositions),
     member([I, J], ListOfZeroedPositions).
 
-get_positionPossibleForPosition(Board, Blocks, I, J, PossibleValue) :-
+get_possibilities(Board, Blocks, I, J, PossibleValue) :-
     get_position(Blocks, I, J, BlockId),
     block_numbers(Board, Blocks, BlockId, RegionNumbers),
-    complement(RegionNumbers, Complement),
+    complement(Board, RegionNumbers, Complement),
     member(PossibleValue, Complement).
 
 verifyAboveGreater(BelowValue, AboveValue) :-
     AboveValue =:= 0 -> true; BelowValue < AboveValue.
 
-verifyAbove(Board, Blocks, I, J, Value, IAbove) :-
+verify_upper(Board, Blocks, I, J, Value, IAbove) :-
     get_position(Blocks, I, J, BlockId),
     get_position(Blocks, IAbove, J, AboveBlockId),
     BlockId =:= AboveBlockId ->
@@ -104,42 +73,42 @@ verifyAbove(Board, Blocks, I, J, Value, IAbove) :-
     get_position(Board, IAbove, J, AboveValue),
     Value =\= AboveValue.
 
-verifyBelow(Board, Blocks, I, J, Value, IBelow) :-
+verify_bottom(Board, Blocks, I, J, Value, IBelow) :-
     get_position(Blocks, I, J, BlockId),
-    get_position(Blocks, IBelow, J, IdRegiaoBaixo),
-    BlockId =:= IdRegiaoBaixo ->
+    get_position(Blocks, IBelow, J, IdBottomRegion),
+    BlockId =:= IdBottomRegion ->
     get_position(Board, IBelow, J, BelowValue), Value > BelowValue; 
     get_position(Board, IBelow, J, BelowValue), Value =\= BelowValue.
 
-verifyUp(Board, Blocks, I, J, PossibleValue) :-
+is_upper_valid(Board, Blocks, I, J, PossibleValue) :-
     IAbove is (I - 1), IAbove >= 0 ->
-    verifyAbove(Board, Blocks, I, J, PossibleValue, IAbove); true.
+    verify_upper(Board, Blocks, I, J, PossibleValue, IAbove); true.
 
-verifyDown(Board, Blocks, I, J, PossibleValue) :-
+is_bottom_valid(Board, Blocks, I, J, PossibleValue) :-
     length(Board, Length),
     IBelow is (I + 1), IBelow < Length ->
-    verifyBelow(Board, Blocks, I, J, PossibleValue, IBelow); true.
+    verify_bottom(Board, Blocks, I, J, PossibleValue, IBelow); true.
 
-verifyLeft(Board, I, J, Value) :-
+is_left_valid(Board, I, J, Value) :-
     Left is (J - 1), Left >= 0 ->
     get_position(Board, I, Left, LeftValue),
     Value =\= LeftValue; true.
 
-verifyRight(Board, I, J, Value) :- 
+is_right_valid(Board, I, J, Value) :- 
     length(Board, Length),
     IRight is (J + 1), IRight < Length ->
     get_position(Board, I, IRight, RightValue),
     Value =\= RightValue; true.
 
-fillPosition(Board, Blocks, I, J, NewBoard) :-
+fillPosition(Board, Blocks, I, J, Solution) :-
     verify_empty(Board, Blocks, I, J) ->
-    get_positionPossibleForPosition(Board, Blocks, I, J, PossibleValue),
-    verifyUp(Board, Blocks, I, J, PossibleValue),
-    verifyDown(Board, Blocks, I, J, PossibleValue),
-    verifyLeft(Board, I, J, PossibleValue),
-    verifyRight(Board, I, J, PossibleValue),
-    update_board(Board, I, J, PossibleValue, NewBoard);
-    NewBoard = Board.
+    get_possibilities(Board, Blocks, I, J, PossibleValue),
+    is_upper_valid(Board, Blocks, I, J, PossibleValue),
+    is_bottom_valid(Board, Blocks, I, J, PossibleValue),
+    is_left_valid(Board, I, J, PossibleValue),
+    is_right_valid(Board, I, J, PossibleValue),
+    update_board(Board, I, J, PossibleValue, Solution);
+    Solution = Board.
 
 solveKojun(OriginalBoard, Blocks, I, J, SolvedBoard) :-
     length(OriginalBoard, N),
@@ -157,5 +126,5 @@ kojun(ID) :-
     writeln('Blocks:'),
     printMatrix(Blocks),
     solveKojun(OriginalBoard, Blocks, 0, 0, SolvedMatrix),
-    nl, writeln('Solved:'), nl,
+    writeln('Solved:'),
     printMatrix(SolvedMatrix), nl.
