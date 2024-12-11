@@ -66,8 +66,6 @@ print_line([H|T]) :- write(H), write(" "), print_line(T).
 print_board([]).
 print_board([H|T]) :- print_line(H), nl, print_board(T).
 
-% ------------- funções principais -------------
-
 % retorna o valor da célula na linha Row e coluna Column
 get_cell(Board, Row, Column, CellValue) :- nth0(Row, Board, Line), nth0(Column, Line, CellValue).
 
