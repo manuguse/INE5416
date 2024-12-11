@@ -1,130 +1,100 @@
-:- use_module(library(clpfd)).
-:- consult('puzzles.pl').
+% Definição dos puzzles
+puzzle(1, [
+    [2, _, _, _, 1, _],
+    [_, _, _, 3, _, _],
+    [_, 3, _, _, 5, 3],
+    [_, _, _, _, _, _],
+    [_, _, 3, _, 4, 2],
+    [_, _, _, _, _, _]
+], [
+    [1, 1, 7, 7, 7, 11],
+    [2, 2, 2, 2, 2, 11],
+    [3, 6, 6, 6, 2, 10],
+    [3, 3, 3, 6, 10, 10],
+    [4, 4, 8, 9, 9, 9],
+    [5, 5, 8, 8, 9, 9]
+]).
 
-board(ID, Board) :-
-    puzzle(ID, Board, _).
+all_distinct([]).
+all_distinct([H|T]) :- \+ member(H, T), all_distinct(T).
 
-blocks(ID, Blocks) :-
-    puzzle(ID, _, Blocks).
+% Verifica se uma célula está vazia.
+is_empty(X) :- var(X).
 
-size(Block, Size) :-
-    length(Block, Size).
+% Encontra uma célula vazia no tabuleiro.
+find_empty_cell(Board, Row, Col) :-
+    nth0(Row, Board, Line),
+    nth0(Col, Line, Cell),
+    is_empty(Cell).
 
-printList([]).
-printList([H|T]) :- write(H), write(" "), printList(T).
+% Atualiza uma célula no tabuleiro.
+update_board(Board, Row, Col, Value, UpdatedBoard) :-
+    nth0(Row, Board, Line, RestRows),
+    nth0(Col, Line, _, RestCols),
+    nth0(Col, NewLine, Value, RestCols),
+    nth0(Row, UpdatedBoard, NewLine, RestRows).
 
-printMatrix([]).
-printMatrix([H|T]) :- printList(H), nl, printMatrix(T).
+% Verifica se não há números repetidos no bloco.
+no_repeated_numbers_in_block(Board, Blocks) :-
+    flatten(Board, FlatBoard),
+    flatten(Blocks, FlatBlocks),
+    findall((BlockId, Num), (nth0(Index, FlatBlocks, BlockId), nth0(Index, FlatBoard, Num), nonvar(Num)), Pairs),
+    group_pairs_by_key(Pairs, Groups),
+    maplist(no_duplicates, Groups).
 
-get_position(Board, I, J, Found) :- 
-    nth0(I, Board, Line),
-    nth0(J, Line, Found).
+no_duplicates((_, Numbers)) :-
+    sort(Numbers, Sorted),
+    length(Numbers, Len),
+    length(Sorted, Len).
 
-set_position(Position, Value, List, NewList) :- 
-    length(Prefix, Position),
-    append(Prefix, [_|Suffix], List),
-    append(Prefix, [Value|Suffix], NewList).
+% Verifica se não há números repetidos em células adjacentes.
+no_repeated_numbers_in_adjacent_cells(Board) :-
+    \+ (adjacent(Board, Row1, Col1, Row2, Col2),
+        nth0(Row1, Board, Line1), nth0(Col1, Line1, Value),
+        nth0(Row2, Board, Line2), nth0(Col2, Line2, Value),
+        nonvar(Value)).
 
-update_board(Board, I, J, Value, Solution) :-
-    nth0(I, Board, OldRow, RestRows),
-    set_position(J, Value, OldRow, NewRow),
-    nth0(I, Solution, NewRow, RestRows).
+adjacent(Board, Row1, Col1, Row2, Col2) :-
+    length(Board, N),
+    between(0, N, Row1), between(0, N, Col1),
+    neighbor(Row1, Col1, Row2, Col2).
 
-find_number_on_block(Board, Blocks, BlockId, Result) :-
-    get_position(Blocks, I, J, BlockId),
-    get_position(Board, I, J, Result).
+neighbor(Row, Col, Row, Col2) :- Col2 is Col + 1.
+neighbor(Row, Col, Row2, Col) :- Row2 is Row + 1.
 
-block_numbers(Board, Blocks, BlockId, FinalList) :- 
-    findall(FoundNumber, find_number_on_block(Board, Blocks, BlockId, FoundNumber), FinalList).
+% Verifica se todas as restrições são satisfeitas.
+verify(Board, Blocks) :-
+    no_repeated_numbers_in_block(Board, Blocks),
+    no_repeated_numbers_in_adjacent_cells(Board).
 
-complement(Board, List, Complement) :-
-    size(Board, Max),
-    numlist(1, Max, UniverseList), 
-    delete(List, 0, FilteredList),
-    subtract(UniverseList, FilteredList, Complement).
+% Encontra valores possíveis para uma célula.
+valid_values(Board, Blocks, Row, Col, Value) :-
+    member(Value, [1, 2, 3, 4, 5, 6, 7, 8, 9]), % Valores possíveis
+    update_board(Board, Row, Col, Value, UpdatedBoard),
+    verify(UpdatedBoard, Blocks).
 
-is_empty_cell(Board, Blocks, BlockId, [I, J]) :-
-    get_position(Blocks, I, J, BlockId),
-    get_position(Board, I, J, 0).
+% Função principal que resolve o tabuleiro.
+solve(Board, Blocks) :-
+    find_empty_cell(Board, Row, Col), % Localiza uma célula vazia
+    valid_values(Board, Blocks, Row, Col, Value), % Encontra um valor válido
+    update_board(Board, Row, Col, Value, UpdatedBoard), % Atualiza o tabuleiro
+    solve(UpdatedBoard, Blocks). % Resolve o tabuleiro recursivamente
+solve(Board, _) :- \+ find_empty_cell(Board, _, _). % Termina se não houver células vazias.
 
-get_empty_cells(Board, Blocks, BlockId, ZeroedPositions) :- 
-    findall([I, J], is_empty_cell(Board, Blocks, BlockId, [I, J]), ZeroedPositions).
+% Função para resolver um puzzle Kojun com base no ID
+solucao(ID, TabuleiroResposta) :-
+    integer(ID), % Verifica se ID é um inteiro
+    puzzle(ID, TabuleiroProblema, Blocks),
+    solve(TabuleiroProblema, Blocks),
+    extract_second_values(TabuleiroProblema, TabuleiroResposta).
 
-verify_empty(Board, Blocks, I, J) :-
-    get_position(Blocks, I, J, BlockId),
-    get_empty_cells(Board, Blocks, BlockId, ListOfZeroedPositions),
-    member([I, J], ListOfZeroedPositions).
+% Extrai o segundo valor de cada matriz
+extract_second([], []).
+extract_second([[_, Second] | Rest], [Second | SecondValues]) :-
+    extract_second(Rest, SecondValues).
 
-get_possibilities(Board, Blocks, I, J, PossibleValue) :-
-    get_position(Blocks, I, J, BlockId),
-    block_numbers(Board, Blocks, BlockId, RegionNumbers),
-    complement(Board, RegionNumbers, Complement),
-    member(PossibleValue, Complement).
-
-verifyAboveGreater(BelowValue, AboveValue) :-
-    AboveValue =:= 0 -> true; BelowValue < AboveValue.
-
-verify_upper(Board, Blocks, I, J, Value, IAbove) :-
-    get_position(Blocks, I, J, BlockId),
-    get_position(Blocks, IAbove, J, AboveBlockId),
-    BlockId =:= AboveBlockId ->
-    get_position(Board, IAbove, J, AboveValue),
-    verifyAboveGreater(Value, AboveValue);
-    get_position(Board, IAbove, J, AboveValue),
-    Value =\= AboveValue.
-
-verify_bottom(Board, Blocks, I, J, Value, IBelow) :-
-    get_position(Blocks, I, J, BlockId),
-    get_position(Blocks, IBelow, J, IdBottomRegion),
-    BlockId =:= IdBottomRegion ->
-    get_position(Board, IBelow, J, BelowValue), Value > BelowValue; 
-    get_position(Board, IBelow, J, BelowValue), Value =\= BelowValue.
-
-is_upper_valid(Board, Blocks, I, J, PossibleValue) :-
-    IAbove is (I - 1), IAbove >= 0 ->
-    verify_upper(Board, Blocks, I, J, PossibleValue, IAbove); true.
-
-is_bottom_valid(Board, Blocks, I, J, PossibleValue) :-
-    length(Board, Length),
-    IBelow is (I + 1), IBelow < Length ->
-    verify_bottom(Board, Blocks, I, J, PossibleValue, IBelow); true.
-
-is_left_valid(Board, I, J, Value) :-
-    Left is (J - 1), Left >= 0 ->
-    get_position(Board, I, Left, LeftValue),
-    Value =\= LeftValue; true.
-
-is_right_valid(Board, I, J, Value) :- 
-    length(Board, Length),
-    IRight is (J + 1), IRight < Length ->
-    get_position(Board, I, IRight, RightValue),
-    Value =\= RightValue; true.
-
-fillPosition(Board, Blocks, I, J, Solution) :-
-    verify_empty(Board, Blocks, I, J) ->
-    get_possibilities(Board, Blocks, I, J, PossibleValue),
-    is_upper_valid(Board, Blocks, I, J, PossibleValue),
-    is_bottom_valid(Board, Blocks, I, J, PossibleValue),
-    is_left_valid(Board, I, J, PossibleValue),
-    is_right_valid(Board, I, J, PossibleValue),
-    update_board(Board, I, J, PossibleValue, Solution);
-    Solution = Board.
-
-solveKojun(OriginalBoard, Blocks, I, J, SolvedBoard) :-
-    length(OriginalBoard, N),
-    (I >= N -> SolvedBoard = OriginalBoard;
-    (J >= N -> NI is I + 1, NJ is 0, solveKojun(OriginalBoard, Blocks, NI, NJ, SolvedBoard);
-    (fillPosition(OriginalBoard, Blocks, I, J, UpdatedBoard),
-    NJ is J + 1,
-    solveKojun(UpdatedBoard, Blocks, I, NJ, SolvedBoard)))).
-
-kojun(ID) :-
-    board(ID, OriginalBoard),
-    blocks(ID, Blocks),
-    writeln('Board:'),
-    printMatrix(OriginalBoard),
-    writeln('Blocks:'),
-    printMatrix(Blocks),
-    solveKojun(OriginalBoard, Blocks, 0, 0, SolvedMatrix),
-    writeln('Solved:'),
-    printMatrix(SolvedMatrix), nl.
+% Extrai os valores de cada linha da matriz
+extract_second_values([], []).
+extract_second_values([Sublist | Rest], [SecondValues | Result]) :-
+    extract_second(Sublist, SecondValues),
+    extract_second_values(Rest, Result).
